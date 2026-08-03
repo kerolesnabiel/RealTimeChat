@@ -1,5 +1,8 @@
+using System.Text;
 using FluentValidation;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using RealTimeChatAPI.Authentication;
 using RealTimeChatAPI.Common;
 using RealTimeChatAPI.Common.Behaviors;
@@ -17,8 +20,22 @@ public static class DependencyInjection
         return services;
     }
 
-    public static IServiceCollection AddPresentation(this IServiceCollection services)
+    public static IServiceCollection AddPresentation(this IServiceCollection services, IConfiguration configuration)
     {
+        services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(o =>
+        {
+            o.TokenValidationParameters = new TokenValidationParameters
+            {
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["Jwt:Secret"]!)),
+                ValidIssuer = configuration["Jwt:Issuer"],
+                ValidAudience = configuration["Jwt:Audience"],
+                ClockSkew = TimeSpan.Zero
+            };
+        });
+
+        services.AddSingleton<IPasswordHasher, PasswordHasher>();
+        services.AddSingleton<ITokenProvider, TokenProvider>();
+
         services.AddExceptionHandler<GlobalExceptionHandler>();
         services.AddProblemDetails(options => options.CustomizeProblemDetails = ctx =>
         {
@@ -47,8 +64,6 @@ public static class DependencyInjection
         // services.Decorate(typeof(ICommandHandler<>), typeof(ValidationDecorator.CommandBaseHandler<>));
 
         services.AddValidatorsFromAssembly(typeof(DependencyInjection).Assembly, includeInternalTypes: true);
-
-        services.AddSingleton<IPasswordHasher, PasswordHasher>();
 
         return services;
     }

@@ -6,7 +6,7 @@ using RealTimeChatAPI.Extensions;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services
-    .AddPresentation()
+    .AddPresentation(builder.Configuration)
     .AddApplication()
     .AddDatabase(builder.Configuration);
 

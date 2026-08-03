@@ -6,6 +6,8 @@ public class User
     public string Name { get; set; } = default!;
     public string Username { get; set; } = default!;
     public string HashedPassword { get; set; } = default!;
+    public string RefreshToken { get; set; } = string.Empty;
+    public DateTime RefreshTokenExpiration { get; set; }
     public string? Image { get; set; }
     public string? About { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
