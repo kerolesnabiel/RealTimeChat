@@ -1,8 +1,9 @@
+using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using RealTimeChatAPI.Authentication;
+using RealTimeChatAPI.Common.Behaviors;
 using RealTimeChatAPI.Common.Messaging;
 using RealTimeChatAPI.Database;
-using RealTimeChatAPI.Features.Users.Common.Messaging;
 
 namespace RealTimeChatAPI;
 
@@ -27,6 +28,11 @@ public static class DependencyInjection
             .AddClasses(classes => classes.AssignableTo(typeof(ICommandHandler<,>)), publicOnly: false)
                 .AsImplementedInterfaces()
                 .WithScopedLifetime());
+
+        services.Decorate(typeof(ICommandHandler<,>), typeof(ValidationDecorator.CommandHandler<,>));
+        // services.Decorate(typeof(ICommandHandler<>), typeof(ValidationDecorator.CommandBaseHandler<>));
+
+        services.AddValidatorsFromAssembly(typeof(DependencyInjection).Assembly, includeInternalTypes: true);
 
         services.AddSingleton<IPasswordHasher, PasswordHasher>();
 

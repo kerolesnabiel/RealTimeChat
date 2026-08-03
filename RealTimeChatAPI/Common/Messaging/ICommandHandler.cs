@@ -1,6 +1,4 @@
-﻿using RealTimeChatAPI.Common.Messaging;
-
-namespace RealTimeChatAPI.Features.Users.Common.Messaging;
+﻿namespace RealTimeChatAPI.Common.Messaging;
 
 public interface ICommandHandler<in TCommand>
     where TCommand : ICommand
