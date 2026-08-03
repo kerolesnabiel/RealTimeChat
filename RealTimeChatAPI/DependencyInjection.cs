@@ -1,4 +1,6 @@
 using Microsoft.EntityFrameworkCore;
+using RealTimeChatAPI.Authentication;
+using RealTimeChatAPI.Common.Messaging;
 using RealTimeChatAPI.Database;
 using RealTimeChatAPI.Features.Users.Common.Messaging;
 
@@ -25,6 +27,8 @@ public static class DependencyInjection
             .AddClasses(classes => classes.AssignableTo(typeof(ICommandHandler<,>)), publicOnly: false)
                 .AsImplementedInterfaces()
                 .WithScopedLifetime());
+
+        services.AddSingleton<IPasswordHasher, PasswordHasher>();
 
         return services;
     }
