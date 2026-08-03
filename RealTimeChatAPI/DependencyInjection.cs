@@ -1,6 +1,7 @@
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using RealTimeChatAPI.Authentication;
+using RealTimeChatAPI.Common;
 using RealTimeChatAPI.Common.Behaviors;
 using RealTimeChatAPI.Common.Messaging;
 using RealTimeChatAPI.Database;
@@ -13,6 +14,19 @@ public static class DependencyInjection
     {
         var connectionString = configuration.GetConnectionString("RealTimeChatDb");
         services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(connectionString));
+        return services;
+    }
+
+    public static IServiceCollection AddPresentation(this IServiceCollection services)
+    {
+        services.AddExceptionHandler<GlobalExceptionHandler>();
+        services.AddProblemDetails(options => options.CustomizeProblemDetails = ctx =>
+        {
+            ctx.ProblemDetails.Extensions["traceId"] = ctx.HttpContext.TraceIdentifier;
+            ctx.ProblemDetails.Extensions["timestamp"] = DateTime.UtcNow;
+            ctx.ProblemDetails.Instance = $"{ctx.HttpContext.Request.Method} {ctx.HttpContext.Request.Path}";
+        });
+
         return services;
     }
 

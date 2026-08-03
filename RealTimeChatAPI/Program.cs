@@ -6,6 +6,7 @@ using RealTimeChatAPI.Extensions;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services
+    .AddPresentation()
     .AddApplication()
     .AddDatabase(builder.Configuration);
 
@@ -19,6 +20,8 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
     app.ApplyMigrations();
 }
+
+app.UseExceptionHandler();
 
 app.MapEndpoints();
 
