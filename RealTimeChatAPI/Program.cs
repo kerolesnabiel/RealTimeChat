@@ -3,7 +3,10 @@ using RealTimeChatAPI.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddDatabase(builder.Configuration);
+builder.Services
+    .AddApplication()
+    .AddDatabase(builder.Configuration);
+
 builder.Services.AddOpenApi();
 
 var app = builder.Build();

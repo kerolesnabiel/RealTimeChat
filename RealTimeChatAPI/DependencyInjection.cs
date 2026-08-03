@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using RealTimeChatAPI.Database;
+using RealTimeChatAPI.Features.Users.Common.Messaging;
 
 namespace RealTimeChatAPI;
 
@@ -9,6 +10,22 @@ public static class DependencyInjection
     {
         var connectionString = configuration.GetConnectionString("RealTimeChatDb");
         services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(connectionString));
+        return services;
+    }
+
+    public static IServiceCollection AddApplication(this IServiceCollection services)
+    {
+        services.Scan(scan => scan.FromAssembliesOf(typeof(DependencyInjection))
+            .AddClasses(classes => classes.AssignableTo(typeof(IQueryHandler<,>)), publicOnly: false)
+                .AsImplementedInterfaces()
+                .WithScopedLifetime()
+            .AddClasses(classes => classes.AssignableTo(typeof(ICommandHandler<>)), publicOnly: false)
+                .AsImplementedInterfaces()
+                .WithScopedLifetime()
+            .AddClasses(classes => classes.AssignableTo(typeof(ICommandHandler<,>)), publicOnly: false)
+                .AsImplementedInterfaces()
+                .WithScopedLifetime());
+
         return services;
     }
 }
