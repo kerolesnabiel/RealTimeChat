@@ -13,7 +13,7 @@ internal sealed class Handler(
     ApplicationDbContext dbContext,
     IPasswordHasher passwordHasher,
     ITokenProvider tokenProvider,
-    IConfiguration configuration) 
+    IConfiguration configuration)
     : ICommandHandler<Command, TokenResult>
 {
     public async Task<TokenResult> Handle(
@@ -25,7 +25,7 @@ internal sealed class Handler(
                 ?? throw new UnauthorizedAccessException("Invalid username or password");
 
         bool isValid = passwordHasher.Verify(command.Password, user.HashedPassword);
-        if(!isValid)
+        if (!isValid)
             throw new UnauthorizedAccessException("Invalid username or password");
 
         string token = tokenProvider.Create(user);
@@ -52,6 +52,7 @@ public sealed class Endpoint : IEndpoint
             CancellationToken cancellationToken) =>
         {
             return await handler.Handle(request, cancellationToken);
-        });
+        })
+        .WithTags(Tags.Users);
     }
 }

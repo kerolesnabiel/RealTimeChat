@@ -48,7 +48,8 @@ internal class RefreshToken
                 CancellationToken cancellationToken) =>
             {
                 return await handler.Handle(command, cancellationToken);
-            });
+            })
+            .WithTags(Tags.Users);
         }
     }
 }

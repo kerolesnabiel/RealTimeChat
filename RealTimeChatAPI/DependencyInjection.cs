@@ -3,6 +3,7 @@ using FluentValidation;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi;
 using RealTimeChatAPI.Authentication;
 using RealTimeChatAPI.Common;
 using RealTimeChatAPI.Common.Behaviors;
@@ -46,6 +47,24 @@ public static class DependencyInjection
             ctx.ProblemDetails.Extensions["traceId"] = ctx.HttpContext.TraceIdentifier;
             ctx.ProblemDetails.Extensions["timestamp"] = DateTime.UtcNow;
             ctx.ProblemDetails.Instance = $"{ctx.HttpContext.Request.Method} {ctx.HttpContext.Request.Path}";
+        });
+
+
+        services.AddEndpointsApiExplorer();
+        services.AddSwaggerGen(c =>
+        {
+            c.CustomSchemaIds(type => type.FullName!.Replace("+", "."));
+
+            c.AddSecurityDefinition("bearerAuth", new OpenApiSecurityScheme
+            {
+                Type = SecuritySchemeType.Http,
+                Scheme = "Bearer"
+            });
+
+            c.AddSecurityRequirement(document => new OpenApiSecurityRequirement
+            {
+                [new OpenApiSecuritySchemeReference("bearerAuth", document)] = []
+            });
         });
 
         return services;

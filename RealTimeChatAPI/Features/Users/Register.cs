@@ -28,12 +28,12 @@ internal static class Register
         }
     }
 
-    internal sealed class Handler(ApplicationDbContext dbContext, IPasswordHasher passwordHasher) 
+    internal sealed class Handler(ApplicationDbContext dbContext, IPasswordHasher passwordHasher)
         : ICommandHandler<Command, Guid>
     {
         public async Task<Guid> Handle(Command command, CancellationToken cancellationToken)
         {
-            if(await dbContext.Users.AnyAsync(u => u.Username == command.Username, cancellationToken))
+            if (await dbContext.Users.AnyAsync(u => u.Username == command.Username, cancellationToken))
                 throw new Exception("Username is already  used");  // edit later
 
             User user = new()
@@ -55,14 +55,15 @@ internal static class Register
         public void MapEndpoint(IEndpointRouteBuilder app)
         {
             app.MapPost("api/users/register", async (
-                Command request, 
+                Command request,
                 ICommandHandler<Command, Guid> handler,
-                CancellationToken cancellationToken) => 
+                CancellationToken cancellationToken) =>
             {
                 await handler.Handle(request, cancellationToken);
 
                 return Results.Created();
-            });
+            })
+            .WithTags(Tags.Users);
         }
     }
 }

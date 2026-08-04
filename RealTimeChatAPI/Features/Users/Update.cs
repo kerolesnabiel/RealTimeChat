@@ -65,7 +65,8 @@ internal static class Update
                 await handler.Handle(command, cancellationToken);
                 return Results.NoContent();
             })
-            .RequireAuthorization();
+            .RequireAuthorization()
+            .WithTags(Tags.Users);
         }
     }
 }
