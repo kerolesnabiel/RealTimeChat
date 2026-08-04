@@ -35,6 +35,10 @@ public static class DependencyInjection
 
         services.AddSingleton<IPasswordHasher, PasswordHasher>();
         services.AddSingleton<ITokenProvider, TokenProvider>();
+        services.AddHttpContextAccessor();
+        services.AddScoped<IUserContext, UserContext>();
+
+        services.AddAuthorization();
 
         services.AddExceptionHandler<GlobalExceptionHandler>();
         services.AddProblemDetails(options => options.CustomizeProblemDetails = ctx =>
@@ -61,7 +65,7 @@ public static class DependencyInjection
                 .WithScopedLifetime());
 
         services.Decorate(typeof(ICommandHandler<,>), typeof(ValidationDecorator.CommandHandler<,>));
-        // services.Decorate(typeof(ICommandHandler<>), typeof(ValidationDecorator.CommandBaseHandler<>));
+        services.Decorate(typeof(ICommandHandler<>), typeof(ValidationDecorator.CommandBaseHandler<>));
 
         services.AddValidatorsFromAssembly(typeof(DependencyInjection).Assembly, includeInternalTypes: true);
 

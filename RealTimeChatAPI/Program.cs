@@ -25,6 +25,9 @@ app.UseExceptionHandler();
 
 app.MapEndpoints();
 
+app.UseAuthentication();
+app.UseAuthorization();
+
 app.UseHttpsRedirection();
 
 app.Run();
