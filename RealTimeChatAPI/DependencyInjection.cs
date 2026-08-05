@@ -1,4 +1,5 @@
 using System.Text;
+using Azure.Storage.Blobs;
 using FluentValidation;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -9,18 +10,12 @@ using RealTimeChatAPI.Common;
 using RealTimeChatAPI.Common.Behaviors;
 using RealTimeChatAPI.Common.Messaging;
 using RealTimeChatAPI.Database;
+using RealTimeChatAPI.Storage;
 
 namespace RealTimeChatAPI;
 
 public static class DependencyInjection
 {
-    public static IServiceCollection AddDatabase(this IServiceCollection services, IConfiguration configuration)
-    {
-        var connectionString = configuration.GetConnectionString("RealTimeChatDb");
-        services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(connectionString));
-        return services;
-    }
-
     public static IServiceCollection AddPresentation(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(o =>
@@ -87,6 +82,17 @@ public static class DependencyInjection
         services.Decorate(typeof(ICommandHandler<>), typeof(ValidationDecorator.CommandBaseHandler<>));
 
         services.AddValidatorsFromAssembly(typeof(DependencyInjection).Assembly, includeInternalTypes: true);
+
+        return services;
+    }
+
+    public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
+    {
+        var connectionString = configuration.GetConnectionString("RealTimeChatDb");
+        services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(connectionString));
+
+        services.AddScoped<IBlobStorageService, BlobStorageService>();
+        services.AddSingleton(new BlobServiceClient(configuration.GetConnectionString("BlobStorage")!));
 
         return services;
     }

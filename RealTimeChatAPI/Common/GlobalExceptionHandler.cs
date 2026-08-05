@@ -8,11 +8,11 @@ namespace RealTimeChatAPI.Common;
 public sealed class GlobalExceptionHandler(
         ILogger<GlobalExceptionHandler> logger,
         IProblemDetailsService problemDetailsService,
-        IHostEnvironment env ) : IExceptionHandler
+        IHostEnvironment env) : IExceptionHandler
 {
     public async ValueTask<bool> TryHandleAsync(
-        HttpContext httpContext, 
-        Exception exception, 
+        HttpContext httpContext,
+        Exception exception,
         CancellationToken cancellationToken)
     {
         logger.LogError(exception, "Unhandled exception occurred. TraceId: {TraceId}",
@@ -44,6 +44,7 @@ public sealed class GlobalExceptionHandler(
     {
         AppException appEx => ((int)appEx.StatusCode, appEx.Message),
         ValidationException => (StatusCodes.Status400BadRequest, "One or more validation errors occurred"),
+        BadHttpRequestException => (StatusCodes.Status400BadRequest, "Bad request"),
         ArgumentNullException => (StatusCodes.Status400BadRequest, "Invalid argument provided"),
         ArgumentException => (StatusCodes.Status400BadRequest, "Invalid argument provided"),
         UnauthorizedAccessException => (StatusCodes.Status401Unauthorized, "Unauthorized"),
