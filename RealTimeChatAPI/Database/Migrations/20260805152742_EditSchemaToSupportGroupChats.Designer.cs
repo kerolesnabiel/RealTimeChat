@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using RealTimeChatAPI.Database;
 
@@ -11,9 +12,11 @@ using RealTimeChatAPI.Database;
 namespace RealTimeChatAPI.Database.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260805152742_EditSchemaToSupportGroupChats")]
+    partial class EditSchemaToSupportGroupChats
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -50,7 +53,7 @@ namespace RealTimeChatAPI.Database.Migrations
 
                     b.HasIndex("LastMessageAt");
 
-                    b.ToTable("Chats", (string)null);
+                    b.ToTable("Chats");
                 });
 
             modelBuilder.Entity("RealTimeChatAPI.Models.ChatMember", b =>
@@ -77,7 +80,7 @@ namespace RealTimeChatAPI.Database.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("ChatMembers", (string)null);
+                    b.ToTable("ChatMembers");
                 });
 
             modelBuilder.Entity("RealTimeChatAPI.Models.Message", b =>
@@ -111,7 +114,7 @@ namespace RealTimeChatAPI.Database.Migrations
 
                     b.HasIndex("ChatId", "CreatedAt");
 
-                    b.ToTable("Messages", (string)null);
+                    b.ToTable("Messages");
                 });
 
             modelBuilder.Entity("RealTimeChatAPI.Models.MessageReceipt", b =>
@@ -132,7 +135,7 @@ namespace RealTimeChatAPI.Database.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("MessageReceipts", (string)null);
+                    b.ToTable("MessageReceipts");
                 });
 
             modelBuilder.Entity("RealTimeChatAPI.Models.User", b =>
@@ -175,7 +178,7 @@ namespace RealTimeChatAPI.Database.Migrations
                     b.HasIndex("Username")
                         .IsUnique();
 
-                    b.ToTable("Users", (string)null);
+                    b.ToTable("Users");
                 });
 
             modelBuilder.Entity("RealTimeChatAPI.Models.Chat", b =>

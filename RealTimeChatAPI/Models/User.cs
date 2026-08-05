@@ -12,6 +12,6 @@ public class User
     public string? About { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
-    public ICollection<Conversation> ConversationsAsUser1 { get; set; } = [];
-    public ICollection<Conversation> ConversationsAsUser2 { get; set; } = [];
+    public ICollection<ChatMember> ChatMembers { get; set; } = [];
+    public ICollection<Message> SentMessages { get; set; } = [];
 }

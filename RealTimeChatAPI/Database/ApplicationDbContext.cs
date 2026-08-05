@@ -7,8 +7,10 @@ internal sealed class ApplicationDbContext
     (DbContextOptions<ApplicationDbContext> options) : DbContext(options)
 {
     internal DbSet<User> Users { get; set; }
+    internal DbSet<Chat> Chats { get; set; }
+    internal DbSet<ChatMember> ChatMembers { get; set; }
     internal DbSet<Message> Messages { get; set; }
-    internal DbSet<Conversation> Conversations { get; set; }
+    internal DbSet<MessageReceipt> MessageReceipts { get; set; }
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -26,44 +28,80 @@ internal sealed class ApplicationDbContext
                 .IsUnique();
         });
 
-        builder.Entity<Conversation>(entity =>
+        builder.Entity<Chat>(entity =>
         {
             entity.HasKey(x => x.Id);
 
-            entity.HasOne(x => x.User1)
-                .WithMany(x => x.ConversationsAsUser1)
-                .HasForeignKey(x => x.User1Id)
-                .OnDelete(DeleteBehavior.Restrict);
+            entity.Property(x => x.Type)
+                .HasConversion<byte>();
 
-            entity.HasOne(x => x.User2)
-                .WithMany(x => x.ConversationsAsUser2)
-                .HasForeignKey(x => x.User2Id)
-                .OnDelete(DeleteBehavior.Restrict);
+            entity.Property(x => x.Name)
+                .HasMaxLength(100);
 
-            entity.HasIndex(x => new { x.User1Id, x.User2Id })
-                .IsUnique();
+            entity.HasOne<User>()
+                .WithMany()
+                .HasForeignKey(x => x.CreatedByUserId)
+                .OnDelete(DeleteBehavior.Restrict);
 
             entity.HasIndex(x => x.LastMessageAt);
+        });
+
+
+        builder.Entity<ChatMember>(entity =>
+        {
+            entity.HasKey(x => new { x.ChatId, x.UserId });
+
+            entity.Property(x => x.Role)
+                .HasConversion<byte>();
+
+            entity.HasOne(x => x.Chat)
+                .WithMany(x => x.Members)
+                .HasForeignKey(x => x.ChatId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(x => x.User)
+                .WithMany(x => x.ChatMembers)
+                .HasForeignKey(x => x.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(x => x.UserId);
         });
 
         builder.Entity<Message>(entity =>
         {
             entity.HasKey(x => x.Id);
 
-            entity.HasOne(x => x.Conversation)
-                .WithMany(x => x.Messages)
-                .HasForeignKey(x => x.ConversationId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            entity.HasOne(x => x.Sender)
-                .WithMany()
-                .HasForeignKey(x => x.SenderId)
-                .OnDelete(DeleteBehavior.Restrict);
-
             entity.Property(x => x.CipherText)
                 .IsRequired();
 
-            entity.HasIndex(x => new { x.ConversationId, x.CreatedAt });
+            entity.HasOne(x => x.Chat)
+                .WithMany(x => x.Messages)
+                .HasForeignKey(x => x.ChatId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(x => x.Sender)
+                .WithMany(x => x.SentMessages)
+                .HasForeignKey(x => x.SenderId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasIndex(x => new { x.ChatId, x.CreatedAt });
+        });
+
+        builder.Entity<MessageReceipt>(entity =>
+        {
+            entity.HasKey(x => new { x.MessageId, x.UserId });
+
+            entity.HasOne(x => x.Message)
+                .WithMany(x => x.Receipts)
+                .HasForeignKey(x => x.MessageId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(x => x.User)
+                .WithMany()
+                .HasForeignKey(x => x.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasIndex(x => x.UserId);
         });
     }
 }
