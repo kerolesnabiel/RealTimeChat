@@ -1,5 +1,4 @@
 using FluentValidation;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using RealTimeChatAPI.Authentication;
 using RealTimeChatAPI.Common.Endpoints;
@@ -53,7 +52,7 @@ internal static class ChangeImage
     {
         public void MapEndpoint(IEndpointRouteBuilder app)
         {
-            app.MapPut("api/users/me/change-image", async (
+            app.MapPut("api/users/me/image", async (
                 IFormFile? file,
                 ICommandHandler<Command, string> handler,
                 CancellationToken cancellationToken
