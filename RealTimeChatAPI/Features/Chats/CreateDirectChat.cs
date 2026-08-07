@@ -42,6 +42,7 @@ internal static class CreateDirectChat
 
             ChatDto dto = chat.Adapt<ChatDto>();
             dto.Name = receiver.Name;
+            dto.Image = receiver.Image;
 
             return dto;
         }
@@ -95,7 +96,7 @@ internal static class CreateDirectChat
                 CancellationToken cancellationToken) =>
             {
                 ChatDto chat = await handler.Handle(new(userId), cancellationToken);
-                return Results.Ok(chat);
+                return Results.CreatedAtRoute(RouteNames.GetChat, new { chat.Id }, chat);
             })
             .RequireAuthorization()
             .WithTags(Tags.Chats);
