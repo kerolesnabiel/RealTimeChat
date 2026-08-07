@@ -32,6 +32,8 @@ internal sealed class ApplicationDbContext
         {
             entity.HasKey(x => x.Id);
 
+            entity.HasIndex(x => x.ChatKey).IsUnique();
+
             entity.Property(x => x.Type)
                 .HasConversion<byte>();
 
