@@ -1,4 +1,3 @@
-using System;
 using Mapster;
 using Microsoft.EntityFrameworkCore;
 using RealTimeChatAPI.Authentication;
@@ -21,8 +20,10 @@ internal static class GetMessage
     {
         public async Task<MessageWithReceiptsDto> Handle(Query query, CancellationToken cancellationToken)
         {
-            var message = await dbContext.Messages.SingleOrDefaultAsync(
-                x => x.Id == query.Id && x.Chat.Members.Any(x => x.UserId == userContext.UserId), cancellationToken)
+            var message = await dbContext.Messages.SingleOrDefaultAsync(x =>
+                x.Id == query.Id &&
+                x.DeletedAt == null &&
+                x.Chat.Members.Any(x => x.UserId == userContext.UserId), cancellationToken)
                 ?? throw new NotFoundException(nameof(Message), query.Id.ToString());
 
             await dbContext.Entry(message).Collection(x => x.Receipts).LoadAsync(cancellationToken);
