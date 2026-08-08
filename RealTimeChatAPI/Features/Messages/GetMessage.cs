@@ -21,13 +21,9 @@ internal static class GetMessage
     {
         public async Task<MessageWithReceiptsDto> Handle(Query query, CancellationToken cancellationToken)
         {
-            var message = await dbContext.Messages.SingleOrDefaultAsync(x => x.Id == query.Id, cancellationToken)
+            var message = await dbContext.Messages.SingleOrDefaultAsync(
+                x => x.Id == query.Id && x.Chat.Members.Any(x => x.UserId == userContext.UserId), cancellationToken)
                 ?? throw new NotFoundException(nameof(Message), query.Id.ToString());
-
-            bool isMember = await dbContext.ChatMembers
-                .AnyAsync(x => x.ChatId == message.ChatId && x.UserId == userContext.UserId, cancellationToken);
-            if (!isMember)
-                throw new UnauthorizedAccessException("You can't access this message.");
 
             await dbContext.Entry(message).Collection(x => x.Receipts).LoadAsync(cancellationToken);
 

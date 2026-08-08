@@ -22,7 +22,10 @@ internal static class SendMessage
     {
         public Validator()
         {
-            RuleFor(x => x.Text).NotEmpty().MaximumLength(4000);
+            RuleFor(x => x.Text)
+                .Must(x => !string.IsNullOrWhiteSpace(x))
+                .WithMessage("Message text cannot be empty.")
+                .MaximumLength(4000);
             RuleFor(x => x.ChatId).NotEmpty();
         }
     }
@@ -35,13 +38,10 @@ internal static class SendMessage
     {
         public async Task<MessageDto> Handle(Command command, CancellationToken cancellationToken)
         {
-            var chat = await dbContext.Chats.SingleOrDefaultAsync(x => x.Id == command.ChatId, cancellationToken)
+            var chat = await dbContext.Chats.SingleOrDefaultAsync(x =>
+                    x.Id == command.ChatId &&
+                    x.Members.Any(x => x.UserId == userContext.UserId), cancellationToken)
                 ?? throw new NotFoundException(nameof(Chat), command.ChatId.ToString());
-
-            bool isMember = await dbContext.ChatMembers
-                .AnyAsync(x => x.ChatId == chat.Id && x.UserId == userContext.UserId, cancellationToken);
-            if (!isMember)
-                throw new UnauthorizedAccessException("You are not a member of this chat.");
 
             Message message = new()
             {
@@ -58,9 +58,10 @@ internal static class SendMessage
 
             if (chat.Type == ChatType.Direct)
             {
-                await dbContext.Entry(chat).Collection(x => x.Members).LoadAsync(cancellationToken);
-                string receiverId = chat.Members.Select(x => x.UserId).Single(x => x != userContext.UserId).ToString();
-                await hub.Clients.User(receiverId).SendAsync(ChatHubEvents.MessageReceived, dto, cancellationToken);
+                var receiverId = await dbContext.ChatMembers
+                    .Where(x => x.ChatId == chat.Id && x.UserId != userContext.UserId)
+                    .Select(x => x.UserId).SingleAsync(cancellationToken);
+                await hub.Clients.User(receiverId.ToString()).SendAsync(ChatHubEvents.MessageReceived, dto, cancellationToken);
             }
             else
                 await hub.Clients.GroupExcept(chat.Id.ToString(), userContext.UserId.ToString())
@@ -72,7 +73,7 @@ internal static class SendMessage
 
     public sealed class Endpoint : IEndpoint
     {
-        private sealed record Request(string Message);
+        private sealed record Request(string Text);
         public void MapEndpoint(IEndpointRouteBuilder app)
         {
             app.MapPost("api/chats/{id}/messages", async (
@@ -81,7 +82,7 @@ internal static class SendMessage
                 ICommandHandler<Command, MessageDto> handler,
                 CancellationToken cancellationToken) =>
             {
-                MessageDto message = await handler.Handle(new(id, request.Message), cancellationToken);
+                MessageDto message = await handler.Handle(new(id, request.Text), cancellationToken);
                 return Results.CreatedAtRoute(RouteNames.GetMessage, new { message.Id }, message);
             })
             .RequireAuthorization()
