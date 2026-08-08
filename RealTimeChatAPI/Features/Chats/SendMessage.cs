@@ -82,7 +82,7 @@ internal static class SendMessage
                 CancellationToken cancellationToken) =>
             {
                 MessageDto message = await handler.Handle(new(id, request.Message), cancellationToken);
-                return Results.Created($"api/messages/{message.Id}", message);
+                return Results.CreatedAtRoute(RouteNames.GetMessage, new { message.Id }, message);
             })
             .RequireAuthorization()
             .WithTags(Tags.Chats);
