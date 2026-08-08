@@ -3,7 +3,7 @@ namespace RealTimeChatAPI.Models;
 public class Message
 {
     public Guid Id { get; set; }
-    public string CipherText { get; set; } = default!;
+    public string Text { get; set; } = default!;
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime? EditedAt { get; set; }
     public DateTime? DeletedAt { get; set; }

@@ -2,6 +2,7 @@ using System.Reflection;
 using RealTimeChatAPI;
 using RealTimeChatAPI.Common.Endpoints;
 using RealTimeChatAPI.Extensions;
+using RealTimeChatAPI.Hubs;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -24,6 +25,7 @@ if (app.Environment.IsDevelopment())
 app.UseExceptionHandler();
 
 app.MapEndpoints();
+app.MapHub<ChatHub>("api/hubs/chat");
 
 app.UseAuthentication();
 app.UseAuthorization();

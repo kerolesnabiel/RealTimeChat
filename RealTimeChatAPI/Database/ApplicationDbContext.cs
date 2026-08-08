@@ -1,10 +1,11 @@
 using Microsoft.EntityFrameworkCore;
+using RealTimeChatAPI.Common.Services;
 using RealTimeChatAPI.Models;
 
 namespace RealTimeChatAPI.Database;
 
 internal sealed class ApplicationDbContext
-    (DbContextOptions<ApplicationDbContext> options) : DbContext(options)
+    (DbContextOptions<ApplicationDbContext> options, IMessageEncryptionService encryption) : DbContext(options)
 {
     internal DbSet<User> Users { get; set; }
     internal DbSet<Chat> Chats { get; set; }
@@ -73,8 +74,11 @@ internal sealed class ApplicationDbContext
         {
             entity.HasKey(x => x.Id);
 
-            entity.Property(x => x.CipherText)
-                .IsRequired();
+            entity.Property(x => x.Text)
+                .IsRequired()
+                .HasConversion(
+                    value => encryption.Encrypt(value),
+                    value => encryption.Decrypt(value));
 
             entity.HasOne(x => x.Chat)
                 .WithMany(x => x.Messages)
