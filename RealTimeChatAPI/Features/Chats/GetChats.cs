@@ -12,54 +12,95 @@ namespace RealTimeChatAPI.Features.Chats;
 
 internal static class GetChats
 {
-    public sealed record Query(int PageNumber = 1) : IQuery<IEnumerable<ChatDto>>;
+    public sealed record GetChatsResponse(
+        IReadOnlyList<ChatDto> Chats,
+        int PageNumber,
+        int PageSize,
+        bool HasNextPage
+    );
+
+    public sealed record Query(int PageNumber = 1) : IQuery<GetChatsResponse>;
 
     internal sealed class Handler(
         ApplicationDbContext dbContext,
-        IUserContext userContext) : IQueryHandler<Query, IEnumerable<ChatDto>>
+        IUserContext userContext) : IQueryHandler<Query, GetChatsResponse>
     {
-        public async Task<IEnumerable<ChatDto>> Handle(Query command, CancellationToken cancellationToken)
-        {
-            int pageSize = 10;
+        private const int PageSize = 15;
 
-            var chats = await dbContext.Chats.Where(x =>
-                x.Members.Any(x => x.UserId == userContext.UserId))
-                .OrderByDescending(x => x.LastMessageAt)
-                .Skip((command.PageNumber - 1) * pageSize)
-                .Take(pageSize)
+        public async Task<GetChatsResponse> Handle(Query query, CancellationToken cancellationToken)
+        {
+            var userId = userContext.UserId;
+
+            var chats = await dbContext.Chats
+                .Where(chat => chat.Members.Any(m => m.UserId == userId))
+                .OrderByDescending(chat => chat.LastMessageAt)
+                .ThenByDescending(chat => chat.Id)
+                .Skip((query.PageNumber - 1) * PageSize)
+                .Take(PageSize + 1)
+                .Select(chat => new
+                {
+                    Chat = chat,
+                    Member = chat.Members
+                            .Where(m => m.UserId == userId)
+                            .Select(m => new
+                            {
+                                m.LastReadMessageId,
+                                LastReadAt = m.LastReadMessage!.CreatedAt
+                            })
+                            .Single()
+                })
                 .Select(x => new
                 {
-                    x.Id,
-                    x.Name,
-                    x.Image,
-                    x.Type,
-                    x.LastMessageAt,
-                    LastMessage = x.Messages.OrderByDescending(m => m.CreatedAt)
-                        .Select(m => new
-                        {
-                            m.Text,
-                            m.DeletedAt,
-                        }).FirstOrDefault(),
-                    OtherMember = x.Type == ChatType.Direct ? x.Members
-                        .Where(m => m.UserId != userContext.UserId)
-                        .Select(m => new
-                        {
-                            m.User.Name,
-                            m.User.Image
-                        }).SingleOrDefault() : null,
+                    x.Chat.Id,
+                    x.Chat.Name,
+                    x.Chat.Image,
+                    x.Chat.Type,
+                    x.Chat.LastMessageAt,
+
+                    LastMessage = x.Chat.Messages
+                        .OrderByDescending(m => m.CreatedAt)
+                        .ThenByDescending(m => m.Id)
+                        .Select(m => new { m.Text, m.DeletedAt })
+                        .FirstOrDefault(),
+
+                    OtherMember = x.Chat.Type == ChatType.Direct
+                        ? x.Chat.Members
+                            .Where(m => m.UserId != userId)
+                            .Select(m => new { m.User.Name, m.User.Image })
+                            .SingleOrDefault()
+                        : null,
+
+                    UnreadMessagesCount = x.Chat.Messages.Count(m => m.SenderId != userId &&
+                        (
+                            x.Member.LastReadMessageId == null ||
+                            m.CreatedAt > x.Member.LastReadAt ||
+                            (
+                                m.CreatedAt == x.Member.LastReadAt &&
+                                m.Id > x.Member.LastReadMessageId
+                            )
+                        ))
                 })
                 .AsNoTracking()
                 .ToListAsync(cancellationToken);
 
-            return chats.Select(x => new ChatDto
-            {
-                Id = x.Id,
-                Name = x.Type == ChatType.Direct ? x.OtherMember?.Name : x.Name,
-                Image = x.Type == ChatType.Direct ? x.OtherMember?.Image : x.Image,
-                Type = x.Type,
-                LastMessageAt = x.LastMessageAt,
-                LastMessagePreview = GetMessagePreview(x.LastMessage?.Text, x.LastMessage?.DeletedAt)
-            });
+            bool hasNextPage = chats.Count > PageSize;
+            if (hasNextPage)
+                chats.RemoveAt(chats.Count - 1);
+
+            var chatsDto = chats
+                .Select(x => new ChatDto
+                {
+                    Id = x.Id,
+                    Name = x.Type == ChatType.Direct ? x.OtherMember?.Name : x.Name,
+                    Image = x.Type == ChatType.Direct ? x.OtherMember?.Image : x.Image,
+                    Type = x.Type,
+                    LastMessageAt = x.LastMessageAt,
+                    LastMessagePreview = GetMessagePreview(x.LastMessage?.Text, x.LastMessage?.DeletedAt),
+                    UnreadMessagesCount = x.UnreadMessagesCount
+                })
+                .ToList();
+
+            return new(chatsDto, query.PageNumber, PageSize, hasNextPage);
         }
 
         private static string? GetMessagePreview(string? text, DateTime? deletedAt)
@@ -80,7 +121,7 @@ internal static class GetChats
         public void MapEndpoint(IEndpointRouteBuilder app)
         {
             app.MapGet("api/chats", async (
-                IQueryHandler<Query, IEnumerable<ChatDto>> handler,
+                IQueryHandler<Query, GetChatsResponse> handler,
                 CancellationToken cancellationToken,
                 [FromQuery, Range(1, int.MaxValue)] int pageNumber = 1) =>
             {

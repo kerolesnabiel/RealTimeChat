@@ -11,4 +11,5 @@ public record ChatDto
     public ChatType Type { get; set; }
     public string? LastMessagePreview { get; set; }
     public DateTime? LastMessageAt { get; set; }
+    public int UnreadMessagesCount { get; set; }
 }
