@@ -67,6 +67,11 @@ internal sealed class ApplicationDbContext
                 .HasForeignKey(x => x.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
 
+            entity.HasOne(x => x.LastReadMessage)
+                .WithMany()
+                .HasForeignKey(x => x.LastReadMessageId)
+                .OnDelete(DeleteBehavior.NoAction);
+
             entity.HasIndex(x => x.UserId);
         });
 
