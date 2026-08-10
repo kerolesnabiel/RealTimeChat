@@ -8,6 +8,6 @@ public class MessageReceipt
     public Guid UserId { get; set; }
     public User User { get; set; } = default!;
 
-    public DateTime? DeliveredAt { get; set; }
+    public DateTime DeliveredAt { get; set; }
     public DateTime? ReadAt { get; set; }
 }
