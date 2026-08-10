@@ -46,14 +46,20 @@ internal static class MarkMessagesAsDelivered
             dbContext.MessageReceipts.AddRange(newReceipts);
             await dbContext.SaveChangesAsync(cancellationToken);
 
-            foreach (var group in undeliveredMessages.GroupBy(m => m.SenderId))
+            foreach (var senderGroup in undeliveredMessages.GroupBy(m => m.SenderId))
             {
-                var messages = group
-                    .Select(m => new { m.Id, m.ChatId, DeliveredAt = deliveredAt })
-                    .ToList();
+                var payload = new
+                {
+                    Chats = senderGroup.GroupBy(m => m.ChatId).Select(chatGroup => new
+                    {
+                        ChatId = chatGroup.Key,
+                        MessageIds = chatGroup.Select(m => m.Id).ToList()
+                    }).ToList(),
+                    DeliveredAt = deliveredAt
+                };
 
-                await hub.Clients.User(group.Key.ToString())
-                    .SendAsync(ChatHubEvents.MessagesDelivered, messages, cancellationToken);
+                await hub.Clients.User(senderGroup.Key.ToString())
+                    .SendAsync(ChatHubEvents.MessagesDelivered, payload, cancellationToken);
             }
         }
     }

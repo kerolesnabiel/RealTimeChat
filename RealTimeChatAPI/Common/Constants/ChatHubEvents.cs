@@ -7,4 +7,5 @@ public class ChatHubEvents
     public const string MessageDeleted = "MessageDeleted";
     public const string MessageDelivered = "MessageDelivered";
     public const string MessagesDelivered = "MessagesDelivered";
+    public const string MessagesRead = "MessagesRead";
 }

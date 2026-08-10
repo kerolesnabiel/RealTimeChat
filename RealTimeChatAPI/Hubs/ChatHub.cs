@@ -29,4 +29,10 @@ internal class ChatHub(IServiceProvider serviceProvider) : Hub
         var handler = serviceProvider.GetRequiredService<ICommandHandler<MarkMessageAsDelivered.Command>>();
         await handler.Handle(new MarkMessageAsDelivered.Command(messageId), Context.ConnectionAborted);
     }
+
+    public async Task MarkMessagesAsReadUpTo(Guid messageId)
+    {
+        var handler = serviceProvider.GetRequiredService<ICommandHandler<MarkMessagesAsReadUpTo.Command>>();
+        await handler.Handle(new MarkMessagesAsReadUpTo.Command(messageId), Context.ConnectionAborted);
+    }
 }
