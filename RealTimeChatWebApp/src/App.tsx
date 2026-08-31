@@ -4,7 +4,9 @@ import NotFound from "./pages/NotFound";
 import Navbar from "./components/Navbar";
 import Signup from "./pages/Signup";
 import Login from "./pages/Login";
-import PublicRoute from "./components/Route/PublicRoute";
+import PublicRoute from "./components/route/PublicRoute";
+import Profile from "./pages/Profile";
+import ProtectedRoute from "./components/route/ProtectedRoute";
 
 function App() {
   return (
@@ -15,6 +17,10 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
+        </Route>
+
+        <Route element={<ProtectedRoute />}>
+          <Route path="/profile" element={<Profile />} />
         </Route>
 
         <Route path="*" element={<NotFound />} />
