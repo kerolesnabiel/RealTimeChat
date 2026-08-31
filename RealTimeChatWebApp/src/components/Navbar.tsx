@@ -1,7 +1,10 @@
-import { MessageCircle } from "lucide-react";
+import { MessageCircle, UserCircle, LogOut } from "lucide-react";
 import { Link } from "react-router";
+import { useAuthStore } from "../store/authStore";
 
 export default function Navbar() {
+  const { isAuthenticated, logout } = useAuthStore();
+
   return (
     <nav className="fixed top-0 right-0 left-0 z-50">
       <div className="mx-auto max-w-7xl px-6 py-5">
@@ -23,19 +26,43 @@ export default function Navbar() {
 
           {/* Actions */}
           <div className="flex items-center gap-2 sm:gap-3">
-            <Link
-              to="/login"
-              className="rounded-xl px-3 py-2 text-sm font-medium text-slate-300 transition hover:bg-white/5 hover:text-white sm:px-4"
-            >
-              Login
-            </Link>
+            {isAuthenticated ? (
+              <>
+                <Link
+                  to="/profile"
+                  className="rounded-xl px-3 py-2 text-sm font-medium text-slate-300 transition hover:bg-white/5 hover:text-white sm:px-4"
+                >
+                  <UserCircle
+                    size={19}
+                    strokeWidth={2.2}
+                    className="text-white"
+                  />
+                </Link>
+                <Link
+                  to="/"
+                  onClick={logout}
+                  className="rounded-xl px-3 py-2 text-sm font-medium text-slate-300 transition hover:bg-white/5 hover:text-white sm:px-4"
+                >
+                  <LogOut size={19} strokeWidth={2.2} className="text-white" />
+                </Link>
+              </>
+            ) : (
+              <>
+                <Link
+                  to="/login"
+                  className="rounded-xl px-3 py-2 text-sm font-medium text-slate-300 transition hover:bg-white/5 hover:text-white sm:px-4"
+                >
+                  Login
+                </Link>
 
-            <Link
-              to="/signup"
-              className="rounded-xl bg-white px-3 py-2 text-sm font-semibold text-slate-950 transition hover:bg-slate-200 sm:px-4"
-            >
-              Sign up
-            </Link>
+                <Link
+                  to="/signup"
+                  className="rounded-xl bg-white px-3 py-2 text-sm font-semibold text-slate-950 transition hover:bg-slate-200 sm:px-4"
+                >
+                  Sign up
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </div>
