@@ -65,3 +65,7 @@ export async function updateUserImage(image: File): Promise<string> {
 export async function deleteUserImage(): Promise<void> {
   await apiClient.delete("/users/me/image");
 }
+
+export async function deleteUser(): Promise<void> {
+  await apiClient.delete("/users/me");
+}

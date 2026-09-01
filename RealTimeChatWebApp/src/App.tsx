@@ -8,6 +8,7 @@ import PublicRoute from "./components/route/PublicRoute";
 import Profile from "./pages/Profile";
 import ProtectedRoute from "./components/route/ProtectedRoute";
 import ChangePassword from "./pages/ChangePassword";
+import DeleteAccount from "./pages/DeleteAccount";
 
 function App() {
   return (
@@ -23,6 +24,7 @@ function App() {
         <Route element={<ProtectedRoute />}>
           <Route path="/profile" element={<Profile />} />
           <Route path="/profile/change-password" element={<ChangePassword />} />
+          <Route path="/profile/delete-account" element={<DeleteAccount />} />
         </Route>
 
         <Route path="*" element={<NotFound />} />

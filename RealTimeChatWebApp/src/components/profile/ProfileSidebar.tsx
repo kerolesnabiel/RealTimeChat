@@ -54,11 +54,7 @@ export default function ProfileSidebar() {
         Change password
       </SidebarItem>
 
-      <SidebarItem
-        to="/profile/delete-account"
-        disabled
-        icon={<Trash2 size={17} />}
-      >
+      <SidebarItem to="/profile/delete-account" icon={<Trash2 size={17} />}>
         Delete account
       </SidebarItem>
     </div>
