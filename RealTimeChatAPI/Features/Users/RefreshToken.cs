@@ -34,7 +34,7 @@ internal class RefreshToken
 
             await dbContext.SaveChangesAsync(cancellationToken);
 
-            return new(token, refreshToken);
+            return new(user.Id, token, refreshToken);
         }
     }
 
