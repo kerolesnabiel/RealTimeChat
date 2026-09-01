@@ -2,38 +2,11 @@ import { CheckCheck } from "lucide-react";
 
 import type { ChatDto } from "../../api/chatApi";
 import { parseChatName } from "../../utils/chatUtils";
+import { formatChatTime } from "../../utils/dateUtils";
 
 interface ChatListItemProps {
   chat: ChatDto;
   onClick: () => void;
-}
-
-function formatChatTime(value: string | null): string {
-  if (!value) {
-    return "";
-  }
-
-  const date = new Date(value);
-
-  if (Number.isNaN(date.getTime())) {
-    return "";
-  }
-
-  const now = new Date();
-
-  const isToday = date.toDateString() === now.toDateString();
-
-  if (isToday) {
-    return date.toLocaleTimeString([], {
-      hour: "numeric",
-      minute: "2-digit",
-    });
-  }
-
-  return date.toLocaleDateString([], {
-    month: "short",
-    day: "numeric",
-  });
 }
 
 export default function ChatListItem({ chat, onClick }: ChatListItemProps) {
@@ -43,11 +16,11 @@ export default function ChatListItem({ chat, onClick }: ChatListItemProps) {
     <button
       type="button"
       onClick={onClick}
-      className="group flex w-full gap-3 rounded-2xl px-3 py-3 text-left transition hover:bg-white/[0.04]"
+      className="group flex w-full gap-3 rounded-2xl px-3 py-3 text-left transition hover:bg-white/4"
     >
       {/* Avatar */}
       <div className="relative shrink-0">
-        <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-full border border-white/10 bg-gradient-to-br from-cyan-400/20 to-blue-500/20 text-sm font-semibold text-cyan-300">
+        <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-full border border-white/10 bg-linear-to-br from-cyan-400/20 to-blue-500/20 text-sm font-semibold text-cyan-300">
           {chat.image ? (
             <img
               src={chat.image}
