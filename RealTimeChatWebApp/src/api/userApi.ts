@@ -8,6 +8,13 @@ export interface UserProfile {
   about: string | null;
 }
 
+export interface SearchUser {
+  id: string;
+  username: string;
+  name: string;
+  image: string | null;
+}
+
 export interface UpdateUserRequest {
   name?: string;
   username?: string;
@@ -68,4 +75,14 @@ export async function deleteUserImage(): Promise<void> {
 
 export async function deleteUser(): Promise<void> {
   await apiClient.delete("/users/me");
+}
+
+export async function searchUsers(searchName: string): Promise<SearchUser[]> {
+  const response = await apiClient.get<SearchUser[]>("/users/", {
+    params: {
+      SearchName: searchName,
+    },
+  });
+
+  return response.data;
 }

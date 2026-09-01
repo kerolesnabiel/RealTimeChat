@@ -9,6 +9,7 @@ import Profile from "./pages/Profile";
 import ProtectedRoute from "./components/route/ProtectedRoute";
 import ChangePassword from "./pages/ChangePassword";
 import DeleteAccount from "./pages/DeleteAccount";
+import Chats from "./pages/Chats";
 
 function App() {
   return (
@@ -22,6 +23,7 @@ function App() {
         </Route>
 
         <Route element={<ProtectedRoute />}>
+          <Route path="/chats" element={<Chats />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/profile/change-password" element={<ChangePassword />} />
           <Route path="/profile/delete-account" element={<DeleteAccount />} />
