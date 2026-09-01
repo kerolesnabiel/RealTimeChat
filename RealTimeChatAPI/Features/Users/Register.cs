@@ -2,6 +2,7 @@ using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using RealTimeChatAPI.Authentication;
 using RealTimeChatAPI.Common.Endpoints;
+using RealTimeChatAPI.Common.Exceptions;
 using RealTimeChatAPI.Common.Messaging;
 using RealTimeChatAPI.Database;
 using RealTimeChatAPI.Models;
@@ -34,7 +35,7 @@ internal static class Register
         public async Task<Guid> Handle(Command command, CancellationToken cancellationToken)
         {
             if (await dbContext.Users.AnyAsync(u => u.Username == command.Username, cancellationToken))
-                throw new Exception("Username is already  used");  // edit later
+                throw new ConflictException("Username is already used");
 
             User user = new()
             {

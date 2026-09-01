@@ -66,7 +66,7 @@ internal static class GetChats
                     OtherMember = x.Chat.Type == ChatType.Direct
                         ? x.Chat.Members
                             .Where(m => m.UserId != userId)
-                            .Select(m => new { m.User.Name, m.User.Image })
+                            .Select(m => new { m.User.Name, m.User.Image, m.User.Username })
                             .SingleOrDefault()
                         : null,
 
@@ -91,7 +91,7 @@ internal static class GetChats
                 .Select(x => new ChatDto
                 {
                     Id = x.Id,
-                    Name = x.Type == ChatType.Direct ? x.OtherMember?.Name : x.Name,
+                    Name = x.Type == ChatType.Direct ? $"{x.OtherMember?.Name}@{x.OtherMember!.Username}" : x.Name,
                     Image = x.Type == ChatType.Direct ? x.OtherMember?.Image : x.Image,
                     Type = x.Type,
                     LastMessageAt = x.LastMessageAt,

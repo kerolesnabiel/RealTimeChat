@@ -1,3 +1,3 @@
 namespace RealTimeChatAPI.Authentication;
 
-record TokenResult(string Token, string RefreshToken);
+record TokenResult(Guid UserId, string Token, string RefreshToken);

@@ -1,6 +1,7 @@
 using Mapster;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using RealTimeChatAPI.Authentication;
 using RealTimeChatAPI.Common.Endpoints;
 using RealTimeChatAPI.Common.Messaging;
 using RealTimeChatAPI.Database;
@@ -12,7 +13,7 @@ internal static class Search
     public sealed record UserDto(Guid Id, string Username, string Name, string? Image);
     public sealed record Query(string SearchName) : IQuery<IEnumerable<UserDto>>;
 
-    internal sealed class Handler(ApplicationDbContext dbContext) : IQueryHandler<Query, IEnumerable<UserDto>>
+    internal sealed class Handler(ApplicationDbContext dbContext, IUserContext userContext) : IQueryHandler<Query, IEnumerable<UserDto>>
     {
         public async Task<IEnumerable<UserDto>> Handle(Query query, CancellationToken cancellationToken)
         {
@@ -22,8 +23,8 @@ internal static class Search
                 return [];
 
             var users = await dbContext.Users
-                .Where(x => x.Username.StartsWith(search) ||
-                    x.Name.Contains(search))
+                .Where(x => (x.Username.StartsWith(search) || x.Name.Contains(search)) &&
+                    x.Id != userContext.UserId)
                 .OrderByDescending(x => x.Username.StartsWith(search))
                 .ThenBy(x => x.Username)
                 .ThenBy(x => x.Name)
