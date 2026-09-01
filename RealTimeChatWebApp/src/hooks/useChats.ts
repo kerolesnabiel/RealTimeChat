@@ -16,6 +16,22 @@ interface UseChatsResult {
   reloadChats: () => Promise<void>;
 
   addChat: (chat: ChatDto) => void;
+
+  updateChatLastMessage: (
+    chatId: string,
+    message: {
+      text: string;
+      createdAt: string;
+      deleted?: boolean;
+    },
+    incrementUnread: boolean,
+  ) => void;
+
+  updateChatMessageStatus: (
+    chatId: string,
+    messageIds: string[],
+    status: number,
+  ) => void;
 }
 
 export function useChats(): UseChatsResult {
@@ -98,6 +114,60 @@ export function useChats(): UseChatsResult {
     void loadFirstPage();
   }, [loadFirstPage]);
 
+  const updateChatLastMessage = useCallback(
+    (
+      chatId: string,
+      message: {
+        text: string;
+        createdAt: string;
+        deleted?: boolean;
+      },
+      incrementUnread: boolean,
+    ) => {
+      setChats((current) => {
+        const existing = current.find((chat) => chat.id === chatId);
+
+        if (!existing) {
+          return current;
+        }
+
+        const updatedChat: ChatDto = {
+          ...existing,
+
+          lastMessagePreview: message.deleted
+            ? "The message was deleted."
+            : message.text,
+
+          lastMessageAt: message.createdAt,
+
+          unreadMessagesCount: incrementUnread
+            ? existing.unreadMessagesCount + 1
+            : existing.unreadMessagesCount,
+        };
+
+        return [updatedChat, ...current.filter((chat) => chat.id !== chatId)];
+      });
+    },
+    [],
+  );
+
+  const updateChatMessageStatus = useCallback(
+    (chatId: string, messageIds: string[], status: number) => {
+      /*
+       * Currently ChatDto doesn't contain
+       * individual messages, so this is left
+       * intentionally empty.
+       *
+       * Message status is handled by
+       * useChatMessages.
+       */
+      void chatId;
+      void messageIds;
+      void status;
+    },
+    [],
+  );
+
   return {
     chats,
     isLoading,
@@ -106,6 +176,8 @@ export function useChats(): UseChatsResult {
     loadAllChats,
     reloadChats,
     addChat,
+    updateChatLastMessage,
+    updateChatMessageStatus,
   };
 }
 

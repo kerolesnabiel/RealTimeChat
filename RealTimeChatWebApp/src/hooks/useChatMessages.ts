@@ -26,16 +26,18 @@ interface UseChatMessagesResult {
   error: string;
 
   loadMessages: (chatId: string) => Promise<void>;
-
   loadBefore: (chatId: string) => Promise<void>;
-
   loadAfter: (chatId: string) => Promise<void>;
-
   loadAllAfter: (chatId: string) => Promise<void>;
-
   sendMessage: (chatId: string, text: string) => Promise<MessageDto | null>;
-
   clearMessages: () => void;
+
+  handleMessageReceived: (message: MessageDto) => void;
+  handleMessageEdited: (message: MessageDto) => void;
+  handleMessageDeleted: (messageId: string, deletedAt: string) => void;
+  handleMessageDelivered: (messageId: string, deliveredAt: string) => void;
+  handleMessagesDelivered: (messageIds: string[], deliveredAt: string) => void;
+  handleMessagesRead: (messageIds: string[], readAt: string) => void;
 }
 
 export function useChatMessages(): UseChatMessagesResult {
@@ -284,7 +286,7 @@ export function useChatMessages(): UseChatMessagesResult {
           createdAt: response.createdAt,
           editedAt: response.editedAt,
           deletedAt: response.deletedAt,
-          status: null,
+          status: 0,
         };
 
         setMessages((current) => {
@@ -330,6 +332,102 @@ export function useChatMessages(): UseChatMessagesResult {
     isLoadingAfterRef.current = false;
   }, []);
 
+  const handleMessageReceived = useCallback((message: MessageDto) => {
+    setMessages((current) => {
+      const exists = current.some((item) => item.id === message.id);
+
+      if (exists) {
+        return current;
+      }
+
+      return [...current, message];
+    });
+  }, []);
+  const handleMessageEdited = useCallback((message: MessageDto) => {
+    setMessages((current) =>
+      current.map((item) =>
+        item.id === message.id
+          ? {
+              ...item,
+              text: message.text,
+              editedAt: message.editedAt,
+              deletedAt: message.deletedAt,
+            }
+          : item,
+      ),
+    );
+  }, []);
+  const handleMessageDeleted = useCallback(
+    (messageId: string, deletedAt: string) => {
+      setMessages((current) =>
+        current.map((message) =>
+          message.id === messageId
+            ? {
+                ...message,
+                text: "The message was deleted.",
+                deletedAt,
+              }
+            : message,
+        ),
+      );
+    },
+    [],
+  );
+  const handleMessageDelivered = useCallback(
+    (messageId: string, deliveredAt: string) => {
+      void deliveredAt;
+
+      setMessages((current) =>
+        current.map((message) =>
+          message.id === messageId
+            ? {
+                ...message,
+                status: Math.max(message.status ?? 0, 1),
+              }
+            : message,
+        ),
+      );
+    },
+    [],
+  );
+  const handleMessagesDelivered = useCallback(
+    (messageIds: string[], deliveredAt: string) => {
+      void deliveredAt;
+
+      const ids = new Set(messageIds);
+
+      setMessages((current) =>
+        current.map((message) =>
+          ids.has(message.id)
+            ? {
+                ...message,
+                status: Math.max(message.status ?? 0, 1),
+              }
+            : message,
+        ),
+      );
+    },
+    [],
+  );
+  const handleMessagesRead = useCallback(
+    (messageIds: string[], readAt: string) => {
+      void readAt;
+
+      const ids = new Set(messageIds);
+
+      setMessages((current) =>
+        current.map((message) =>
+          ids.has(message.id)
+            ? {
+                ...message,
+                status: 2,
+              }
+            : message,
+        ),
+      );
+    },
+    [],
+  );
   return {
     messages,
     firstUnreadMessageId,
@@ -350,6 +448,13 @@ export function useChatMessages(): UseChatMessagesResult {
     loadAllAfter,
     sendMessage,
     clearMessages,
+
+    handleMessageReceived,
+    handleMessageEdited,
+    handleMessageDeleted,
+    handleMessageDelivered,
+    handleMessagesDelivered,
+    handleMessagesRead,
   };
 }
 

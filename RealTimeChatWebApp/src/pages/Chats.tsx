@@ -15,11 +15,20 @@ import { useUserSearch } from "../hooks/useUserSearch";
 import { useAuthStore } from "../store/authStore";
 import { parseChatName } from "../utils/chatUtils";
 
+import { useChatHub } from "../hooks/useChatHub";
+
+import { type MessageDto } from "../api/chatApi";
+
+import type {
+  SignalRMessageReceived,
+  SignalRMessageDeleted,
+  SignalRMessageDelivered,
+  SignalRMessagesDelivered,
+  SignalRMessagesRead,
+} from "../signalr/chatHub";
+
 export default function Chats() {
   const currentUserId = useAuthStore((state) => state.userId);
-
-  const { chats, isLoading, isLoadingAll, error, loadAllChats, addChat } =
-    useChats();
 
   const [search, setSearch] = useState("");
 
@@ -30,6 +39,16 @@ export default function Chats() {
   const [selectedUser, setSelectedUser] = useState<SearchUser | null>(null);
 
   const [scrollToBottomSignal, setScrollToBottomSignal] = useState(0);
+
+  const {
+    chats,
+    isLoading,
+    isLoadingAll,
+    error,
+    loadAllChats,
+    addChat,
+    updateChatLastMessage,
+  } = useChats();
 
   const {
     messages,
@@ -51,6 +70,13 @@ export default function Chats() {
     loadAllAfter,
     sendMessage,
     clearMessages,
+
+    handleMessageReceived,
+    handleMessageEdited,
+    handleMessageDeleted,
+    handleMessageDelivered,
+    handleMessagesDelivered,
+    handleMessagesRead,
   } = useChatMessages();
 
   const {
@@ -178,6 +204,164 @@ export default function Chats() {
   };
 
   const hasConversation = Boolean(selectedChat || selectedUser);
+
+  const handleHubMessageReceived = (message: SignalRMessageReceived) => {
+    const isMine = message.senderId === currentUserId;
+
+    const isCurrentChat = message.chatId === selectedChat?.id;
+
+    /*
+     * Update the open conversation.
+     */
+    const mappedMessage: MessageDto = {
+      id: message.id,
+      senderId: message.senderId,
+      text: message.text,
+      createdAt: message.createdAt,
+      editedAt: message.editedAt,
+      deletedAt: message.deletedAt,
+      status: isMine ? 0 : null,
+    };
+
+    /*
+     * Avoid adding a message to the current
+     * conversation if we're not viewing it.
+     *
+     * The chat list still gets updated below.
+     */
+    if (isCurrentChat) {
+      handleMessageReceived(mappedMessage);
+    }
+
+    /*
+     * Update the sidebar.
+     *
+     * Incoming messages increment unread only
+     * when we're not currently viewing that chat.
+     *
+     * Messages sent by us never increase unread.
+     */
+    updateChatLastMessage(
+      message.chatId,
+      {
+        text: message.text,
+        createdAt: message.createdAt,
+      },
+      !isMine && !isCurrentChat,
+    );
+  };
+
+  const handleHubMessageEdited = (message: SignalRMessageReceived) => {
+    const isCurrentChat = message.chatId === selectedChat?.id;
+
+    /*
+     * Update the open conversation.
+     */
+    if (isCurrentChat) {
+      handleMessageEdited({
+        id: message.id,
+        senderId: message.senderId,
+        text: message.text,
+        createdAt: message.createdAt,
+        editedAt: message.editedAt,
+        deletedAt: message.deletedAt,
+        status: null,
+      });
+    }
+
+    /*
+     * If the edited message is the latest
+     * message in the sidebar, update its
+     * preview.
+     */
+    const currentChat = chats.find((chat) => chat.id === message.chatId);
+
+    if (!currentChat) {
+      return;
+    }
+
+    updateChatLastMessage(
+      message.chatId,
+      {
+        text: message.text,
+        createdAt: message.createdAt,
+      },
+      false,
+    );
+  };
+
+  const handleHubMessageDeleted = (event: SignalRMessageDeleted) => {
+    /*
+     * The open message list knows the message
+     * ID, so update it directly.
+     */
+    handleMessageDeleted(event.id, event.deletedAt);
+
+    /*
+     * Update sidebar preview if this is the
+     * latest message.
+     */
+    const chat = chats.find((item) => item.id === selectedChat?.id);
+
+    if (!chat) {
+      return;
+    }
+
+    /*
+     * We can identify the latest message
+     * locally.
+     */
+    const lastMessage = messages[messages.length - 1];
+
+    if (lastMessage?.id === event.id) {
+      updateChatLastMessage(
+        chat.id,
+        {
+          text: "The message was deleted.",
+          createdAt: lastMessage.createdAt,
+          deleted: true,
+        },
+        false,
+      );
+    }
+  };
+
+  const handleHubMessageDelivered = (event: SignalRMessageDelivered) => {
+    handleMessageDelivered(event.id, event.deliveredAt);
+  };
+
+  const handleHubMessagesDelivered = (payload: SignalRMessagesDelivered) => {
+    /*
+     * Only update messages belonging to
+     * the currently open chat.
+     */
+    const currentChat = payload.chats.find(
+      (chat) => chat.chatId === selectedChat?.id,
+    );
+
+    if (!currentChat) {
+      return;
+    }
+
+    handleMessagesDelivered(currentChat.messageIds, payload.deliveredAt);
+  };
+
+  const handleHubMessagesRead = (payload: SignalRMessagesRead) => {
+    if (payload.chatId !== selectedChat?.id) {
+      return;
+    }
+
+    handleMessagesRead(payload.messageIds, payload.readAt);
+  };
+
+  useChatHub({
+    onMessageReceived: handleHubMessageReceived,
+    onMessageEdited: handleHubMessageEdited,
+    onMessageDeleted: handleHubMessageDeleted,
+    onMessageDelivered: handleHubMessageDelivered,
+    onMessagesDelivered: handleHubMessagesDelivered,
+    onMessagesRead: handleHubMessagesRead,
+  });
 
   return (
     <ChatLayout
