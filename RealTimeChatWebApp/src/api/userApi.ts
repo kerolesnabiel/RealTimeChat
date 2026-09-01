@@ -14,6 +14,11 @@ export interface UpdateUserRequest {
   about?: string;
 }
 
+export interface ChangePasswordRequest {
+  password: string;
+  newPassword: string;
+}
+
 export interface ApiProblemDetails {
   type?: string;
   title?: string;
@@ -35,6 +40,12 @@ export async function updateUserProfile(
   data: UpdateUserRequest,
 ): Promise<void> {
   await apiClient.patch("/users/me", data);
+}
+
+export async function changeUserPassword(
+  data: ChangePasswordRequest,
+): Promise<void> {
+  await apiClient.put("/users/me/change-password", data);
 }
 
 export async function updateUserImage(image: File): Promise<string> {
