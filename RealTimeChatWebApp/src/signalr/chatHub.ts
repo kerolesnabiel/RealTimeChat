@@ -199,3 +199,15 @@ export function onMessagesRead(
     hub.off("MessagesRead", handler);
   };
 }
+
+export async function markMessagesAsDelivered(): Promise<void> {
+  const hub = await startChatHub();
+
+  await hub.invoke("MarkMessagesAsDelivered");
+}
+
+export async function markMessageAsDelivered(messageId: string): Promise<void> {
+  const hub = await startChatHub();
+
+  await hub.invoke("MarkMessageAsDelivered", messageId);
+}

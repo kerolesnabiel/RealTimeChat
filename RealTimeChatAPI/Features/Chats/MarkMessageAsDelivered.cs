@@ -11,16 +11,15 @@ namespace RealTimeChatAPI.Features.Chats;
 
 internal static class MarkMessageAsDelivered
 {
-    public sealed record Command(Guid MessageId) : ICommand;
+    public sealed record Command(Guid MessageId, Guid CurrentUserId) : ICommand;
 
     internal sealed class Handler(
         ApplicationDbContext dbContext,
-        IUserContext userContext,
         IHubContext<ChatHub> hub) : ICommandHandler<Command>
     {
         public async Task Handle(Command command, CancellationToken cancellationToken)
         {
-            var userId = userContext.UserId;
+            var userId = command.CurrentUserId;
             var deliveredAt = DateTime.UtcNow;
 
             var undeliveredMessage = await dbContext.Messages

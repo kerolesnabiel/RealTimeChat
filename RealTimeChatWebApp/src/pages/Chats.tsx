@@ -19,12 +19,13 @@ import { useChatHub } from "../hooks/useChatHub";
 
 import { type MessageDto } from "../api/chatApi";
 
-import type {
-  SignalRMessageReceived,
-  SignalRMessageDeleted,
-  SignalRMessageDelivered,
-  SignalRMessagesDelivered,
-  SignalRMessagesRead,
+import {
+  type SignalRMessageReceived,
+  type SignalRMessageDeleted,
+  type SignalRMessageDelivered,
+  type SignalRMessagesDelivered,
+  type SignalRMessagesRead,
+  markMessageAsDelivered,
 } from "../signalr/chatHub";
 
 export default function Chats() {
@@ -205,14 +206,11 @@ export default function Chats() {
 
   const hasConversation = Boolean(selectedChat || selectedUser);
 
-  const handleHubMessageReceived = (message: SignalRMessageReceived) => {
+  const handleHubMessageReceived = async (message: SignalRMessageReceived) => {
     const isMine = message.senderId === currentUserId;
 
     const isCurrentChat = message.chatId === selectedChat?.id;
 
-    /*
-     * Update the open conversation.
-     */
     const mappedMessage: MessageDto = {
       id: message.id,
       senderId: message.senderId,
@@ -223,24 +221,10 @@ export default function Chats() {
       status: isMine ? 0 : null,
     };
 
-    /*
-     * Avoid adding a message to the current
-     * conversation if we're not viewing it.
-     *
-     * The chat list still gets updated below.
-     */
     if (isCurrentChat) {
       handleMessageReceived(mappedMessage);
     }
 
-    /*
-     * Update the sidebar.
-     *
-     * Incoming messages increment unread only
-     * when we're not currently viewing that chat.
-     *
-     * Messages sent by us never increase unread.
-     */
     updateChatLastMessage(
       message.chatId,
       {
@@ -331,10 +315,6 @@ export default function Chats() {
   };
 
   const handleHubMessagesDelivered = (payload: SignalRMessagesDelivered) => {
-    /*
-     * Only update messages belonging to
-     * the currently open chat.
-     */
     const currentChat = payload.chats.find(
       (chat) => chat.chatId === selectedChat?.id,
     );
@@ -355,7 +335,10 @@ export default function Chats() {
   };
 
   useChatHub({
-    onMessageReceived: handleHubMessageReceived,
+    onMessageReceived: async (message) => {
+      handleHubMessageReceived(message);
+      await markMessageAsDelivered(message.id);
+    },
     onMessageEdited: handleHubMessageEdited,
     onMessageDeleted: handleHubMessageDeleted,
     onMessageDelivered: handleHubMessageDelivered,

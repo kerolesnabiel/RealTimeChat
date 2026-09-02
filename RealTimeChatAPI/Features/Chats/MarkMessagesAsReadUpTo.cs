@@ -11,16 +11,15 @@ namespace RealTimeChatAPI.Features.Chats;
 
 internal static class MarkMessagesAsReadUpTo
 {
-    public sealed record Command(Guid MessageId) : ICommand;
+    public sealed record Command(Guid MessageId, Guid CurrentUserId) : ICommand;
 
     internal sealed class Handler(
         ApplicationDbContext dbContext,
-        IUserContext userContext,
         IHubContext<ChatHub> hub) : ICommandHandler<Command>
     {
         public async Task Handle(Command command, CancellationToken cancellationToken)
         {
-            var userId = userContext.UserId;
+            var userId = command.CurrentUserId;
             var readAt = DateTime.UtcNow;
 
             var target = await dbContext.Messages

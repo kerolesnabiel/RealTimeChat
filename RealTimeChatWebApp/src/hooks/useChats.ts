@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import { getChats, type ChatDto } from "../api/chatApi";
 import type { ApiProblemDetails } from "../api/userApi";
+import { markMessagesAsDelivered } from "../signalr/chatHub";
 
 interface UseChatsResult {
   chats: ChatDto[];
@@ -51,13 +52,14 @@ export function useChats(): UseChatsResult {
 
     try {
       const response = await getChats(1);
-
       setChats(response.chats);
     } catch (error) {
       handleApiError(error, setError);
     } finally {
       setIsLoading(false);
     }
+    console.log(chats);
+    await markMessagesAsDelivered();
   }, []);
 
   const loadAllChats = useCallback(async () => {

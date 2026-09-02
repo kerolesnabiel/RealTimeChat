@@ -20,19 +20,22 @@ internal class ChatHub(IServiceProvider serviceProvider) : Hub
 
     public async Task MarkMessagesAsDelivered()
     {
+        Guid.TryParse(Context.UserIdentifier, out Guid userId);
         var handler = serviceProvider.GetRequiredService<ICommandHandler<MarkMessagesAsDelivered.Command>>();
-        await handler.Handle(new MarkMessagesAsDelivered.Command(), Context.ConnectionAborted);
+        await handler.Handle(new MarkMessagesAsDelivered.Command(userId), Context.ConnectionAborted);
     }
 
     public async Task MarkMessageAsDelivered(Guid messageId)
     {
+        Guid.TryParse(Context.UserIdentifier, out Guid userId);
         var handler = serviceProvider.GetRequiredService<ICommandHandler<MarkMessageAsDelivered.Command>>();
-        await handler.Handle(new MarkMessageAsDelivered.Command(messageId), Context.ConnectionAborted);
+        await handler.Handle(new MarkMessageAsDelivered.Command(messageId, userId), Context.ConnectionAborted);
     }
 
     public async Task MarkMessagesAsReadUpTo(Guid messageId)
     {
+        Guid.TryParse(Context.UserIdentifier, out Guid userId);
         var handler = serviceProvider.GetRequiredService<ICommandHandler<MarkMessagesAsReadUpTo.Command>>();
-        await handler.Handle(new MarkMessagesAsReadUpTo.Command(messageId), Context.ConnectionAborted);
+        await handler.Handle(new MarkMessagesAsReadUpTo.Command(messageId, userId), Context.ConnectionAborted);
     }
 }
