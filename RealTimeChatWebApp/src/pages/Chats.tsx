@@ -170,6 +170,11 @@ export default function Chats() {
 
       if (message) {
         setScrollToBottomSignal((value) => value + 1);
+        updateChatLastMessage(
+          selectedChatId,
+          { text: message.text, createdAt: message.createdAt },
+          false,
+        );
       }
 
       return;
