@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
-using RealTimeChatAPI.Authentication;
 using RealTimeChatAPI.Common.Constants;
 using RealTimeChatAPI.Common.Messaging;
 using RealTimeChatAPI.Database;
@@ -11,16 +10,15 @@ namespace RealTimeChatAPI.Features.Chats;
 
 internal static class MarkMessagesAsDelivered
 {
-    public sealed record Command : ICommand;
+    public sealed record Command(Guid CurrentUserId) : ICommand;
 
     internal sealed class Handler(
         ApplicationDbContext dbContext,
-        IUserContext userContext,
         IHubContext<ChatHub> hub) : ICommandHandler<Command>
     {
         public async Task Handle(Command command, CancellationToken cancellationToken)
         {
-            var userId = userContext.UserId;
+            var userId = command.CurrentUserId;
             var deliveredAt = DateTime.UtcNow;
 
             var undeliveredMessages = await dbContext.Messages

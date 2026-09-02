@@ -1,0 +1,47 @@
+@import "tailwindcss";
+
+@layer components {
+  .app-background {
+    @apply relative min-h-screen overflow-hidden bg-[#020617] text-white;
+  }
+
+  /* Subtle grid */
+  .app-background::before {
+    content: "";
+    @apply pointer-events-none absolute inset-0 opacity-[0.035];
+
+    background-image:
+      linear-gradient(to right, white 1px, transparent 1px),
+      linear-gradient(to bottom, white 1px, transparent 1px);
+
+    background-size: 48px 48px;
+  }
+
+  .app-background::after {
+    content: "";
+    @apply pointer-events-none absolute left-1/2 -top-62.5
+      h-150 w-150
+      -translate-x-1/2
+      rounded-full
+      bg-cyan-500/10
+      blur-[120px];
+  }
+}
+
+@layer components {
+  .glow-blue {
+    @apply pointer-events-none absolute
+      h-100 w-100
+      rounded-full
+      bg-blue-600/10
+      blur-[120px];
+  }
+
+  .glow-purple {
+    @apply pointer-events-none absolute
+      h-112.5 w-112.5
+      rounded-full
+      bg-violet-600/10
+      blur-[120px];
+  }
+}
