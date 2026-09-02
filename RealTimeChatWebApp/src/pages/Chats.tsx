@@ -26,6 +26,7 @@ import {
   type SignalRMessagesDelivered,
   type SignalRMessagesRead,
   markMessageAsDelivered,
+  markMessagesAsReadUpTo,
 } from "../signalr/chatHub";
 
 export default function Chats() {
@@ -49,6 +50,7 @@ export default function Chats() {
     loadAllChats,
     addChat,
     updateChatLastMessage,
+    reloadChats,
   } = useChats();
 
   const {
@@ -129,7 +131,12 @@ export default function Chats() {
     setSelectedChat(chat);
     setSelectedUser(null);
 
-    await loadMessages(chat.id);
+    const messages = await loadMessages(chat.id);
+    if (chat.unreadMessagesCount > 0) {
+      const lastMessageId = messages[messages.length - 1].id;
+      await markMessagesAsReadUpTo(lastMessageId);
+      reloadChats();
+    }
   };
 
   const handleSelectUser = async (user: SearchUser) => {
@@ -223,6 +230,9 @@ export default function Chats() {
 
     if (isCurrentChat) {
       handleMessageReceived(mappedMessage);
+      await markMessagesAsReadUpTo(message.id);
+    } else {
+      await markMessageAsDelivered(message.id);
     }
 
     updateChatLastMessage(
@@ -335,10 +345,7 @@ export default function Chats() {
   };
 
   useChatHub({
-    onMessageReceived: async (message) => {
-      handleHubMessageReceived(message);
-      await markMessageAsDelivered(message.id);
-    },
+    onMessageReceived: handleHubMessageReceived,
     onMessageEdited: handleHubMessageEdited,
     onMessageDeleted: handleHubMessageDeleted,
     onMessageDelivered: handleHubMessageDelivered,

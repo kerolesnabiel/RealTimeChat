@@ -25,7 +25,7 @@ interface UseChatMessagesResult {
 
   error: string;
 
-  loadMessages: (chatId: string) => Promise<void>;
+  loadMessages: (chatId: string) => Promise<MessageDto[]>;
   loadBefore: (chatId: string) => Promise<void>;
   loadAfter: (chatId: string) => Promise<void>;
   loadAllAfter: (chatId: string) => Promise<void>;
@@ -84,28 +84,24 @@ export function useChatMessages(): UseChatMessagesResult {
     setHasMoreBefore(false);
     setHasMoreAfter(false);
 
-    /*
-     * Reset pagination locks when switching
-     * conversations.
-     */
     isLoadingBeforeRef.current = false;
     isLoadingAfterRef.current = false;
 
+    let messages: MessageDto[] = [];
     try {
       const response = await getChatMessages(chatId);
-
-      setMessages(response.messages);
-
+      messages = response.messages;
+      setMessages(messages);
       setFirstUnreadMessageId(response.firstUnreadMessageId);
-
       setHasMoreBefore(response.hasMoreBefore);
-
       setHasMoreAfter(response.hasMoreAfter);
     } catch (error) {
       handleApiError(error, setError);
     } finally {
       setIsLoading(false);
     }
+
+    return messages;
   }, []);
 
   /*

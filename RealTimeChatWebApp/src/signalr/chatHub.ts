@@ -202,12 +202,15 @@ export function onMessagesRead(
 
 export async function markMessagesAsDelivered(): Promise<void> {
   const hub = await startChatHub();
-
   await hub.invoke("MarkMessagesAsDelivered");
 }
 
 export async function markMessageAsDelivered(messageId: string): Promise<void> {
   const hub = await startChatHub();
-
   await hub.invoke("MarkMessageAsDelivered", messageId);
+}
+
+export async function markMessagesAsReadUpTo(messageId: string): Promise<void> {
+  const hub = await startChatHub();
+  await hub.invoke("MarkMessagesAsReadUpTo", messageId);
 }

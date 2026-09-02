@@ -58,7 +58,6 @@ export function useChats(): UseChatsResult {
     } finally {
       setIsLoading(false);
     }
-    console.log(chats);
     await markMessagesAsDelivered();
   }, []);
 
