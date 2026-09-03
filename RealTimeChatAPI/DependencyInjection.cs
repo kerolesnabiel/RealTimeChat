@@ -2,7 +2,6 @@ using System.Text;
 using Azure.Storage.Blobs;
 using FluentValidation;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
@@ -87,7 +86,6 @@ public static class DependencyInjection
 
         services.AddValidatorsFromAssembly(typeof(DependencyInjection).Assembly, includeInternalTypes: true);
 
-        services.AddDataProtection().SetApplicationName(nameof(RealTimeChatAPI));
         services.AddSingleton<IMessageEncryptionService, MessageEncryptionService>();
 
         return services;
